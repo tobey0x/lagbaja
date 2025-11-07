@@ -331,15 +331,3 @@ air
 # Without auto-reload
 go run main.go
 ```
-
-## License
-
-[Your License Here]
-
-## Contributing
-
-[Your Contributing Guidelines Here]
-
-## Support
-
-For issues and questions, please open an issue on the repository.
