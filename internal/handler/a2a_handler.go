@@ -169,17 +169,24 @@ func (h *A2AHandler) extractPDFData(msg *models.Message) []byte {
 }
 
 func (h *A2AHandler) buildTaskResult(flashcards *models.FlashcardSet, userMsg *models.Message) *models.TaskResult {
-	// Generate IDs
+	// Use the incoming taskId or generate a new UUID
 	taskID := userMsg.TaskID
 	if taskID == "" {
-		taskID = fmt.Sprintf("task-%s", uuid.New().String()[:8])
+		taskID = uuid.New().String()
 	}
 
+	// Generate messageId as full UUID
+	messageID := uuid.New().String()
+	
+	// Format flashcards as markdown text
 	responseText := h.flashcardService.FormatAsText(flashcards)
+	
+	// Build agent message
 	responseMsg := models.Message{
 		Kind:      models.KindMessage,
 		Role:      models.RoleAgent,
-		MessageID: fmt.Sprintf("msg-%s", uuid.New().String()[:8]),
+		MessageID: messageID,
+		TaskID:    taskID,
 		Parts: []models.MessagePart{
 			{
 				Kind: models.KindText,
@@ -188,14 +195,15 @@ func (h *A2AHandler) buildTaskResult(flashcards *models.FlashcardSet, userMsg *m
 		},
 	}
 
+	// Build artifact with same content
 	artifacts := []models.Artifact{
 		{
-			ArtifactID: fmt.Sprintf("artifact-%s", uuid.New().String()),
-			Name:       "flashcardSet",
+			ArtifactID: uuid.New().String(),
+			Name:       "Flashcard Set",
 			Parts: []models.MessagePart{
 				{
-					Kind: models.KindData,
-					Data: flashcards,
+					Kind: models.KindText,
+					Text: responseText,
 				},
 			},
 		},
@@ -203,17 +211,13 @@ func (h *A2AHandler) buildTaskResult(flashcards *models.FlashcardSet, userMsg *m
 
 	return &models.TaskResult{
 		ID:        taskID,
-		ContextID: fmt.Sprintf("ctx-%s", uuid.New().String()),
+		ContextID: uuid.New().String(),  // Full UUID for context
 		Status: models.Status{
 			State:     models.StateCompleted,
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Message:   responseMsg,
 		},
 		Artifacts: artifacts,
-		History: []models.Message{
-			*userMsg,
-			responseMsg,
-		},
 		Kind: "task",
 	}
 }

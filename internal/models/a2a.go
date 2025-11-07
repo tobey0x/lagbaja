@@ -7,6 +7,7 @@ type Message struct {
 	Parts     []MessagePart `json:"parts"`
 	MessageID string        `json:"messageId"`
 	TaskID    string        `json:"taskId,omitempty"`
+	Metadata  interface{}   `json:"metadata,omitempty"`
 }
 
 type MessagePart struct {
